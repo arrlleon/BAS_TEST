@@ -1,0 +1,19 @@
+{
+  "name": "testtask_bas",
+  "version": "1.0.0",
+  "main": "BAS.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "module",
+  "description": "",
+  "dependencies": {
+    "express": "^4.21.0",
+    "nanoid": "^5.0.7",
+    "redis": "^4.7.0",
+    "valid-url": "^1.0.9"
+  }
+}
