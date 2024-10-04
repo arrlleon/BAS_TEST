@@ -1,7 +1,3 @@
-// установил express для создания веб-сервера
-// установил redis для хранения сокращенных ссылок
-// установил valid-url для валидации URL
-
 import express, { json } from "express";
 import { createClient } from "redis";
 import { isUri } from "valid-url";
@@ -14,37 +10,60 @@ const client = createClient({
   url: "redis://localhost:6379",
 });
 
+client.on("error", (err) => {
+  console.error("Ошибка Redis:", err);
+});
+
 await client.connect();
 
 app.post("/shorten", async (req, res) => {
-  const { url } = req.body;
+  try {
+    console.log("Тело запроса:", req.body);
 
-  if (!isUri(url)) {
-    return res.status(400).json({ error: "Некорректный URL" });
+    const { url } = req.body;
+
+    console.log("Полученный URL:", url);
+
+    if (!isUri(url)) {
+      return res.status(400).json({ error: "Некорректный URL" });
+    }
+
+    let shortcode;
+
+    do {
+      shortcode = nanoid(8);
+    } while (await client.exists(shortcode));
+
+    await client.set(shortcode, url);
+
+    res.status(200).json({
+      shortcode,
+      redirect: `http://localhost:3002/${shortcode}`,
+    });
+  } catch (error) {
+    console.error("Ошибка при создании короткой ссылки:", error);
+    res.status(500).json({ error: "Ошибка сервера" });
   }
-
-  const shortcode = nanoid(8);
-  await client.set(shortcode, url);
-
-  res.status(200).json({
-    shortcode,
-    redirect: `http://localhost:3002/${shortcode}`,
-  });
 });
 
 app.get("/:shortcode", async (req, res) => {
-  const { shortcode } = req.params;
+  try {
+    const { shortcode } = req.params;
 
-  const originalUrl = await client.get(shortcode);
+    const originalUrl = await client.get(shortcode);
 
-  if (originalUrl) {
-    return res.redirect(302, originalUrl);
+    if (originalUrl) {
+      return res.redirect(302, originalUrl);
+    }
+
+    res.status(404).json({ error: "Код не найден" });
+  } catch (error) {
+    console.error("Ошибка при получении оригинального URL:", error);
+    res.status(500).json({ error: "Ошибка сервера" });
   }
-
-  res.status(404).json({ error: "Код не найден" });
 });
 
 const PORT = 3002;
 app.listen(PORT, () => {
-  console.log(`сервер запущен на порту ${PORT}`);
+  console.log(`Сервер запущен на порту ${PORT}`);
 });
