@@ -36,13 +36,13 @@ app.post("/shorten", async (req, res) => {
       return res.status(400).json({ error: "Некорректный URL" });
     }
 
-    let shortcode = nanoid(8);
+    const shortcode = nanoid(8);
 
     await client.set(shortcode, url);
 
     res.status(200).json({
       shortcode,
-      redirect: `http://localhost:3002/${shortcode}`,
+      redirect: `${process.env.API_URL$}${shortcode}`,
     });
   } catch (error) {
     console.error("Ошибка при создании короткой ссылки:", error);
