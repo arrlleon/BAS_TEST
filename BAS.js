@@ -2,19 +2,27 @@ import express, { json } from "express";
 import { createClient } from "redis";
 import { isUri } from "valid-url";
 const { nanoid } = await import("nanoid");
+import dotenv from "dotenv";
+
+dotenv.config();
 
 const app = express();
 app.use(json());
 
 const client = createClient({
-  url: "redis://localhost:6379",
+  url: process.env.REDIS_URL,
 });
 
 client.on("error", (err) => {
   console.error("Ошибка Redis:", err);
 });
 
-await client.connect();
+try {
+  await client.connect();
+} catch (error) {
+  console.log("Ошибка подключения к редис: ", error);
+  process.exit(1);
+}
 
 app.post("/shorten", async (req, res) => {
   try {
@@ -28,11 +36,7 @@ app.post("/shorten", async (req, res) => {
       return res.status(400).json({ error: "Некорректный URL" });
     }
 
-    let shortcode;
-
-    do {
-      shortcode = nanoid(8);
-    } while (await client.exists(shortcode));
+    let shortcode = nanoid(8);
 
     await client.set(shortcode, url);
 
@@ -42,7 +46,7 @@ app.post("/shorten", async (req, res) => {
     });
   } catch (error) {
     console.error("Ошибка при создании короткой ссылки:", error);
-    res.status(500).json({ error: "Ошибка сервера" });
+    res.status(500).json({ error: `Ошибка сервера: ${error}` });
   }
 });
 
@@ -59,11 +63,11 @@ app.get("/:shortcode", async (req, res) => {
     res.status(404).json({ error: "Код не найден" });
   } catch (error) {
     console.error("Ошибка при получении оригинального URL:", error);
-    res.status(500).json({ error: "Ошибка сервера" });
+    res.status(500).json({ error: `Ошибка сервера: ${error}` });
   }
 });
 
-const PORT = 3002;
+const PORT = process.env.PORT;
 app.listen(PORT, () => {
   console.log(`Сервер запущен на порту ${PORT}`);
 });
