@@ -35,7 +35,7 @@ app.use(json());
 
 ```js
 const client = createClient({
-  url: "redis://localhost:6379",
+  url: process.env.REDIS_URL,
 });
 
 client.on("error", (err) => {
@@ -45,7 +45,7 @@ client.on("error", (err) => {
 await client.connect();
 ```
 
-Создаем клиента Redis, который подключается к локальному серверу Redis на порту 6379.
+Создаем клиента Redis, который подключается к локальному серверу Redis на порту 6379 через process.env.REDIS_URL
 Подписываемся на событие ошибки клиента Redis и выводим сообщение в консоль.
 
 ---
@@ -70,7 +70,7 @@ app.post("/shorten", async (req, res) => {
 
     res.status(200).json({
       shortcode,
-      redirect: `http://localhost:3002/${shortcode}`,
+      redirect: `${process.env.API_URL$}${shortcode}`,
     });
   } catch (error) {
     console.error("Ошибка при создании короткой ссылки:", error);
