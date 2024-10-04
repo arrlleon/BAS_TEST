@@ -9,6 +9,7 @@
 - `createClient` — создание Redis-клиента для работы с базой данных.
 - `isUri` — функция для валидации URL.
 - `nanoid` — функция для генерации уникальных кодов.
+- `dotenv` - управление переменными окружениями для Node.js
 
 Redis запускается локально.
 
@@ -21,6 +22,7 @@ import express, { json } from "express";
 import { createClient } from "redis";
 import { isUri } from "valid-url";
 const { nanoid } = await import("nanoid");
+import dotenv from "dotenv";
 
 const app = express();
 app.use(json());
